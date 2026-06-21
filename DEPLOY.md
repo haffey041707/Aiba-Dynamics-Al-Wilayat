@@ -8,6 +8,62 @@ Plan: ~30–45 minutes. Cost: a $5/mo VPS + (optional) a domain name.
 
 ---
 
+## ⚡ The easy way — one command
+
+After you have an Ubuntu server (see **Provider quick-start** below), SSH in and run:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/haffey041707/Aiba-Dynamics-Al-Wilayat/main/deploy/setup.sh -o setup.sh
+sudo bash setup.sh
+```
+
+That installs everything, downloads the content data, starts the app, and puts
+nginx in front. When it finishes it prints your link (`http://YOUR_SERVER_IP`).
+
+**With a domain + free HTTPS**, point the domain's DNS at your server first
+(A records for `@` and `www`), then run:
+
+```bash
+sudo DOMAIN=your-domain.com LE_EMAIL=you@gmail.com bash setup.sh
+```
+
+→ Your site is live at **https://your-domain.com** 🎉
+
+Options you can add before `bash setup.sh`:
+- `WITH_TAFSIR=1` — also download the large (~131 MB) tafsir data.
+- `SMTP_USER=… SMTP_PASS=…` — preset the Gmail app password for reset emails
+  (otherwise edit `/etc/al-wilayat.env` afterwards and `systemctl restart al-wilayat`).
+
+The script is **safe to re-run** — it updates the code and restarts the service.
+
+---
+
+## 🖱️ Provider quick-start (getting the server)
+
+You just need an Ubuntu 22.04/24.04 server and its IP. Two popular options:
+
+### Hetzner Cloud (cheapest, ~€4/mo)
+1. Sign up at **console.hetzner.cloud** → **New Project**.
+2. **Add Server** → Location: nearest to you → Image: **Ubuntu 24.04** →
+   Type: **CX22** (2 vCPU / 4 GB) → under **SSH keys** add yours (or set a root
+   password) → **Create & Buy now**.
+3. Copy the server's **IPv4**. Connect: `ssh root@THAT_IP`.
+4. Run the one command above.
+
+### DigitalOcean (most popular, $6/mo)
+1. Sign up at **cloud.digitalocean.com** → **Create → Droplets**.
+2. Region: nearest → Image: **Ubuntu 24.04** → Size: **Basic / Regular, $6/mo
+   (1 GB)** → Authentication: **SSH key** (recommended) → **Create Droplet**.
+3. Copy the Droplet's **IP**. Connect: `ssh root@THAT_IP`.
+4. Run the one command above.
+
+> AWS Lightsail works too: create an **Ubuntu** instance, open ports **80** and
+> **443** in its Networking tab, then SSH in and run the one command.
+
+---
+
+## Manual steps (if you prefer to do it yourself)
+
 ## 0. What you need
 - A VPS running **Ubuntu 22.04/24.04** (Hetzner, DigitalOcean, AWS Lightsail…).
 - (Optional but recommended) a **domain name**.
