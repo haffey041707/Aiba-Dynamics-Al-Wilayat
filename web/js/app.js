@@ -168,6 +168,9 @@ const ICON_PLAY = '<svg class="picon" viewBox="0 0 24 24" fill="currentColor" ar
 const ICON_PAUSE = '<svg class="picon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="6" y="5" width="4" height="14" rx="1.2"/><rect x="14" y="5" width="4" height="14" rx="1.2"/></svg>';
 // Western → Arabic-Indic digits (for numbering shown beside Arabic text).
 const arDigits = (s) => String(s).replace(/[0-9]/g, (d) => "٠١٢٣٤٥٦٧٨٩"[+d]);
+// Arabic hadith text often begins with its order number ("1 - حدثنا…"); render
+// that leading number in Arabic-Indic numerals (the English translation keeps 1.).
+const arHadithText = (s) => String(s).replace(/^(\s*)(\d+)/, (_, sp, n) => sp + arDigits(n));
 function playAudio(url) {
   if (!url) return toast(t("coming_soon"));
   if (currentAudio) currentAudio.pause();
@@ -710,12 +713,10 @@ async function openBook(id, page = 1) {
     const d = await api(`/hadith/book/${id}?page=${page}&size=20`);
     _book.total = d.total;
     const pages = Math.ceil(d.total / d.size);
-    // Arabic-edition books use Arabic-Indic numerals in the chapter/order line.
-    const arN = (s) => d.edition === "ar" ? arDigits(s) : s;
     const items = d.hadiths.map((h) => `
       <div class="ayah-block">
-        <div class="translit" style="margin:0 0 8px">${arN(localizedText(h.category || ""))} ${h.chapter ? "· " + arN(localizedText(h.chapter)) : ""}</div>
-        ${h.ar ? `<div class="ar">${h.ar}</div>` : ""}
+        <div class="translit" style="margin:0 0 8px">${localizedText(h.category || "")} ${h.chapter ? "· " + localizedText(h.chapter) : ""}</div>
+        ${h.ar ? `<div class="ar">${arHadithText(h.ar)}</div>` : ""}
         ${translatedContent(h.en) ? `<div class="tr">${translatedContent(h.en)}</div>` : ""}
         ${h.grading ? `<div class="translit">⚖️ ${localizedText(h.grading)}</div>` : ""}
         ${refLine(h)}
@@ -754,7 +755,7 @@ async function hadithSearch() {
     body.innerHTML = `<button class="btn ghost" style="margin-bottom:16px" onclick="renderHadith(document.getElementById('view-hadith'))">← ${t("collections")}</button>
       <div class="page-head"><h1 style="font-size:18px">${d.count} ${t("results_for")} "${escapeHtml(q)}"</h1></div>
       ${d.results.map((h) => `<div class="ayah-block">
-        ${h.ar ? `<div class="ar">${h.ar}</div>` : ""}${translatedContent(h.en) ? `<div class="tr">${translatedContent(h.en)}</div>` : ""}${refLine(h)}</div>`).join("") || `<div class='card'>${t("no_matches")}</div>`}`;
+        ${h.ar ? `<div class="ar">${arHadithText(h.ar)}</div>` : ""}${translatedContent(h.en) ? `<div class="tr">${translatedContent(h.en)}</div>` : ""}${refLine(h)}</div>`).join("") || `<div class='card'>${t("no_matches")}</div>`}`;
   } catch { body.innerHTML = offlineBanner(); }
 }
 
@@ -847,7 +848,7 @@ async function loadCorpus(path, sel, pendingMsg) {
     if (!d.count) { box.innerHTML = `<div class="card" style="color:var(--text-2)">⏳ ${pendingMsg}</div>`; return; }
     box.innerHTML = d.results.slice(0, 80).map((h) => `
       <div class="ayah-block">
-        ${h.ar ? `<div class="ar">${h.ar}</div>` : ""}
+        ${h.ar ? `<div class="ar">${arHadithText(h.ar)}</div>` : ""}
         ${translatedContent(h.en) ? `<div class="tr">${translatedContent(h.en)}</div>` : ""}
         ${h.grading ? `<div class="translit">⚖️ ${localizedText(h.grading)}</div>` : ""}
         ${refLine(h)}
@@ -1646,7 +1647,7 @@ async function renderSearch(v) {
       ? `<div class="page-head" style="margin-top:18px"><h1 style="font-size:18px">${label} (${n})</h1></div>${html}` : "";
 
     const hadithHtml = hadith.map((h) =>
-      lineCard(h.ar, h.en, `📖 ${escapeHtml((h.reference && h.reference.citation) || h.name || t("nav_hadith"))}`,
+      lineCard(arHadithText(h.ar), h.en, `📖 ${escapeHtml((h.reference && h.reference.citation) || h.name || t("nav_hadith"))}`,
         `go('hadith');setTimeout(()=>openBook('${h.bookId}'),60)`)).join("");
     const verseHtml = verses.map((vv) =>
       lineCard(vv.ar, vv.en, `📖 ${t("nav_quran")} ${vv.surah}:${vv.ayah} (${escapeHtml(localizedText(vv.surahName || ""))})`,
