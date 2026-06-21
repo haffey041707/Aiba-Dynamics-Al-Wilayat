@@ -45,9 +45,13 @@ def main():
     flag = "<script>window.WILAYAT_STATIC=true;</script>\n  "
     html = (DOCS / "index.html").read_text(encoding="utf-8")
     html = html.replace('<script src="js/data.js', flag + '<script src="js/data.js', 1)
+    # Live build has no auth server: hide the sign-in / account + sign-out UI.
+    hide = ("<style>/* live (no server): no accounts */\n"
+            "  .account, .settings-account { display: none !important; }</style>\n</head>")
+    html = html.replace("</head>", hide, 1)
     (DOCS / "index.html").write_text(html, encoding="utf-8")
     (DOCS / ".nojekyll").write_text("", encoding="utf-8")
-    print("• frontend copied to docs/ (+ static flag, .nojekyll)")
+    print("• frontend copied to docs/ (+ static flag, hide-auth, .nojekyll)")
 
     # ---------------- Quran ----------------
     idx = S.quran_index()
