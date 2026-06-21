@@ -51,7 +51,7 @@ def main():
     html = html.replace("</head>", hide, 1)
     # …and put a dummy bar in the settings sheet so visitors know login isn't available.
     dummy = (
-        '<div class="settings-dummy" style="margin-top:14px;display:flex;align-items:center;gap:12px;'
+        '<div class="settings-dummy" style="margin-top:auto;display:flex;align-items:center;gap:12px;'
         'padding:12px 14px;border-radius:14px;background:var(--glass-bg);border:1px solid var(--glass-brd)">'
         '<div style="width:38px;height:38px;border-radius:50%;display:grid;place-items:center;flex-shrink:0;'
         'background:rgba(31,123,255,.16);border:1px solid var(--glass-brd);color:var(--text-1)">'
