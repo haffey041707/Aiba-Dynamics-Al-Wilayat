@@ -49,6 +49,21 @@ def main():
     hide = ("<style>/* live (no server): no accounts */\n"
             "  .account, .settings-account { display: none !important; }</style>\n</head>")
     html = html.replace("</head>", hide, 1)
+    # …and put a dummy bar in the settings sheet so visitors know login isn't available.
+    dummy = (
+        '<div class="settings-dummy" style="margin-top:14px;display:flex;align-items:center;gap:12px;'
+        'padding:12px 14px;border-radius:14px;background:var(--glass-bg);border:1px solid var(--glass-brd)">'
+        '<div style="width:38px;height:38px;border-radius:50%;display:grid;place-items:center;flex-shrink:0;'
+        'background:rgba(31,123,255,.16);border:1px solid var(--glass-brd);color:var(--text-1)">'
+        '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" '
+        'stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/>'
+        '<path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>'
+        '<div style="min-width:0"><div style="font-weight:600;color:var(--text-0);font-size:13.5px">'
+        'Login Page Unavailable for now</div>'
+        '<div style="font-size:11.5px;color:var(--text-2)">Accounts are coming soon</div></div></div>\n    '
+    )
+    html = html.replace('<div class="settings-account" id="settingsAccount"',
+                        dummy + '<div class="settings-account" id="settingsAccount"', 1)
     (DOCS / "index.html").write_text(html, encoding="utf-8")
     (DOCS / ".nojekyll").write_text("", encoding="utf-8")
     print("• frontend copied to docs/ (+ static flag, hide-auth, .nojekyll)")
