@@ -38,6 +38,9 @@ python app/main.py
 
 `main.py` auto-creates the virtual environment, installs dependencies if needed, starts the server on **http://localhost:8000**, and opens the app in your browser.
 
+### Publish it as a website
+To host Al-Wilayat as its own site on your own server (with a domain + HTTPS), follow **[DEPLOY.md](DEPLOY.md)** — a step-by-step VPS guide (nginx + systemd + free SSL).
+
 ## 📦 Content data
 
 The large reference datasets (Qur'an, Hadith, Tafsir) are **not stored in this repository** — they are downloadable and are fetched by the ingest scripts:

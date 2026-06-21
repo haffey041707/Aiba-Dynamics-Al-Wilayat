@@ -121,9 +121,12 @@ if __name__ == "__main__":
 
     import uvicorn
 
-    url = "http://localhost:8000"
+    # Honour the host's PORT (servers/VPS set this); default to 8000 locally.
+    port = int(os.environ.get("PORT", "8000"))
+    url = f"http://localhost:{port}"
     print(f"\n  Al-Wilayat is starting…\n  App:  {url}\n  Docs: {url}/docs\n")
-    # Open the browser shortly after the server comes up (skip with WILAYAT_NOBROWSER=1).
+    # Open the browser shortly after the server comes up (skip with WILAYAT_NOBROWSER=1,
+    # which production/servers should always set).
     if os.environ.get("WILAYAT_NOBROWSER") != "1":
         threading.Timer(1.5, lambda: webbrowser.open(url)).start()
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    uvicorn.run(app, host="0.0.0.0", port=port)

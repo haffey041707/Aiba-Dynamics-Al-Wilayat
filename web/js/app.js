@@ -3,7 +3,9 @@
    Vanilla JS · no build step
    ============================================================ */
 
-const API_BASE = "http://localhost:8000/api"; // backend (optional; app works offline w/ mock data)
+// Same origin as the page (FastAPI serves both the site and the API), so this works
+// on localhost AND on your real domain. Override with window.WILAYAT_API if needed.
+const API_BASE = (typeof window !== "undefined" && window.WILAYAT_API) || "/api";
 
 const State = {
   lang: localStorage.getItem("wilayat.lang") || "en",

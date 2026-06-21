@@ -3,7 +3,9 @@
    main app via localStorage("wilayat.lang"). Stores the session in
    localStorage("wilayat.auth"). */
 
-const API_BASE = "http://localhost:8000/api";
+// Same origin as the page (FastAPI serves both the site and the API), so this
+// works on localhost AND on your real domain. Override with window.WILAYAT_API.
+const API_BASE = (typeof window !== "undefined" && window.WILAYAT_API) || "/api";
 const AUTH_KEY = "wilayat.auth";
 const LANG_KEY = "wilayat.lang";
 
