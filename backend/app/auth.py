@@ -61,7 +61,12 @@ oauth2 = OAuth2PasswordBearer(tokenUrl="/api/auth/login", auto_error=False)
 # ---- Persistent user store (SQLite) ----------------------------------------
 # Accounts survive server restarts, so users only sign up once and can sign in
 # any time afterwards. Swap this for PostgreSQL in production if desired.
-DB_PATH = Path(os.getenv("WILAYAT_DB", Path(__file__).resolve().parent / "data" / "users.db"))
+# On read-only serverless hosts (e.g. Vercel) only /tmp is writable, so fall
+# back to it there. NOTE: /tmp is ephemeral — accounts reset between cold starts.
+_default_db = Path(__file__).resolve().parent / "data" / "users.db"
+if os.getenv("VERCEL") or os.getenv("WILAYAT_EPHEMERAL_DB"):
+    _default_db = Path("/tmp/users.db")
+DB_PATH = Path(os.getenv("WILAYAT_DB", _default_db))
 DB_PATH.parent.mkdir(parents=True, exist_ok=True)
 
 
