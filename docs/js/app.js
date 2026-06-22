@@ -370,7 +370,7 @@ const Stats = {
   save(s) { try { localStorage.setItem(this.KEY, JSON.stringify(s)); } catch { /* ignore */ } },
   _roll(s) {
     const t = this._today();
-    if (s.date !== t) { s.date = t; s.versesToday = 0; s.dhikrToday = 0; s.readSurahs = []; }
+    if (s.date !== t) { s.date = t; s.versesToday = 0; s.dhikrToday = 0; s.readSurahs = []; s.readAyat = []; }
     return s;
   },
   get() { const s = this._roll(this.load()); this.save(s); return s; },
@@ -393,6 +393,16 @@ const Stats = {
     }
   },
   addDhikr(n = 1) { const s = this.get(); s.dhikrToday = (s.dhikrToday || 0) + n; this.save(s); },
+  // Count a single verse as read (once per ayah per day) — for live per-user "Read today".
+  addVerseRead(key) {
+    const s = this.get();
+    s.readAyat = s.readAyat || [];
+    if (!s.readAyat.includes(key)) {
+      s.readAyat.push(key);
+      s.versesToday = (s.versesToday || 0) + 1;
+      this.save(s);
+    }
+  },
   // ---- Per-device prayer tracking (live build) ----
   getPrayers(date) { const s = this.load(); return (s.prayers && s.prayers[date || this._today()]) || []; },
   togglePrayer(key) {
@@ -562,7 +572,7 @@ function verseBlock(a, surahN) {
   const tr = tf ? `<div class="tr">${a[tf] || ""}</div>` : "";
   const audio = a.audio ? `<button class="chip" onclick="event.stopPropagation();playAyah(this,'${a.audio}')">${ICON_PLAY}</button>` : "";
   const taf = surahN ? `<button class="chip" onclick="event.stopPropagation();toggleTafsir(${surahN},${a.n},this)">📚 ${localizedText("Tafsir al-Mizan")}</button>` : "";
-  return `<div class="ayah-block">
+  return `<div class="ayah-block"${surahN ? ` data-v="${surahN}:${a.n}"` : ""}>
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
         <span class="num">${surahN ? surahN + ":" : ""}${a.n}</span>
         <span style="display:flex;gap:6px">${audio}${taf}</span></div>
@@ -602,13 +612,29 @@ function tafsirToHtml(md) {
     .replace(/\*(.+?)\*/g, "<em>$1</em>");
 }
 
+// Live: count each Quran verse once as it scrolls into view (per-user "Read today").
+let _verseObserver = null;
+function observeVersesRead(container) {
+  if (typeof IntersectionObserver === "undefined") return;
+  if (_verseObserver) _verseObserver.disconnect();
+  _verseObserver = new IntersectionObserver((entries) => {
+    for (const e of entries) {
+      if (e.isIntersecting && e.target.dataset.v) {
+        Stats.addVerseRead(e.target.dataset.v);
+        _verseObserver.unobserve(e.target);
+      }
+    }
+  }, { threshold: 0.6 });
+  container.querySelectorAll(".ayah-block[data-v]").forEach((b) => _verseObserver.observe(b));
+}
+
 async function openSurah(n) {
   stopSurahAudio();                       // reset recitation state for the new surah
   const body = el("#quranBody");
   body.innerHTML = `<div class="card">${t("loading")}</div>`;
   try {
     const d = await api(`/quran/surah/${n}`);
-    Stats.addSurahRead(n, (d.verses || []).length);   // count toward "Read Today"
+    if (!STATIC) Stats.addSurahRead(n, (d.verses || []).length);   // Mac: whole surah on open
     const allAudio = d.verses.filter((v) => v.audio).map((v) => v.audio);
     body.innerHTML = `
       <div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap">
@@ -623,6 +649,7 @@ async function openSurah(n) {
       ${n !== 1 && n !== 9 ? `<div class="ayah-block" style="text-align:center"><div class="ar">بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ</div></div>` : ""}
       ${d.verses.map((a) => verseBlock(a, n)).join("")}`;
     window._surahAudio = allAudio;
+    if (STATIC) observeVersesRead(body);   // live: count each verse as it's scrolled into view
   } catch {
     body.innerHTML = offlineBanner();
   }
