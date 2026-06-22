@@ -547,7 +547,10 @@ function verseBlock(a, surahN) {
 }
 
 // tafsir edition follows the active language (falls back to English)
-const tafsirEdition = () => "almizan_" + (["en", "ar", "fa", "ur"].includes(State.lang) ? State.lang : "en");
+// al-Mizan exists in ar/fa/ur/en; map each UI language onto the closest edition
+// (Kashmiri→Urdu, Dari→Farsi; Azerbaijani/Malay/Singapore→English).
+const tafsirEdition = () => "almizan_" +
+  ({ en: "en", sg: "en", ar: "ar", fa: "fa", prs: "fa", ur: "ur", ks: "ur", az: "en", ms: "en" }[State.lang] || "en");
 
 async function toggleTafsir(s, a, btn) {
   const box = btn.closest(".ayah-block").querySelector(".tafsir-box");
@@ -838,9 +841,9 @@ async function openText(kind, id, row) {
       </div>
       <p style="color:var(--text-2);margin-bottom:14px">${disp(d.en_title, d.ar_title, title)} · ${d.count} ${t("passages")}</p>
       ${d.verses.map((vrs) => {
-        if (vrs.head) return `<h3 style="color:var(--text-0);margin:18px 0 8px;font-size:16px">${localizedText(vrs.en || "")}</h3>`;
+        if (vrs.head) return `<h3 style="color:var(--text-0);margin:18px 0 8px;font-size:16px">${hadithTrans(vrs) || localizedText(vrs.en || "")}</h3>`;
         const ar = vrs.ar ? `<div class="ar">${vrs.ar}</div>` : "";
-        const tr = translatedContent(vrs.en);
+        const tr = hadithTrans(vrs);
         const en = tr ? `<div class="tr"${vrs.ar ? "" : ' style="font-size:16px;color:var(--text-1)"'}>${tr}</div>` : "";
         return `<div class="ayah-block">${ar}${en}</div>`;
       }).join("")}`;
@@ -1587,9 +1590,9 @@ async function openSearchText(kind, id) {
       </div>
       <p style="color:var(--text-2);margin-bottom:14px">${disp(d.en_title, d.ar_title, t("passages"))} · ${d.count || 0} ${t("passages")}</p>
       ${(d.verses || []).map((vrs) => {
-        if (vrs.head) return `<h3 style="color:var(--text-0);margin:18px 0 8px;font-size:16px">${localizedText(vrs.en || "")}</h3>`;
+        if (vrs.head) return `<h3 style="color:var(--text-0);margin:18px 0 8px;font-size:16px">${hadithTrans(vrs) || localizedText(vrs.en || "")}</h3>`;
         const ar = vrs.ar ? `<div class="ar">${vrs.ar}</div>` : "";
-        const tr = translatedContent(vrs.en);
+        const tr = hadithTrans(vrs);
         const en = tr ? `<div class="tr"${vrs.ar ? "" : ' style="font-size:16px;color:var(--text-1)"'}>${tr}</div>` : "";
         return `<div class="ayah-block">${ar}${en}</div>`;
       }).join("")}`;
