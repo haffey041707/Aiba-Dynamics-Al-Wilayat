@@ -29,7 +29,7 @@ except Exception:
 
 HADITH = os.path.join(os.path.dirname(__file__), "..", "backend", "app", "data", "hadith")
 DEFAULT_LANGS = ["ur", "fa", "az", "ms"]
-SAVE_EVERY = 150          # save the book file this often (resumability)
+SAVE_EVERY = 25           # save the book file this often (resumability)
 
 
 def _translate_once(text, tl, sl="en"):
@@ -73,8 +73,10 @@ def translate(text, tl, retries=5):
 
 def main():
     langs = [a for a in sys.argv[1:] if a in DEFAULT_LANGS] or DEFAULT_LANGS
-    files = sorted(f for f in glob.glob(os.path.join(HADITH, "*.json"))
-                   if not os.path.basename(f).startswith("_"))
+    files = [f for f in glob.glob(os.path.join(HADITH, "*.json"))
+             if not os.path.basename(f).startswith("_")]
+    # Smallest books first so complete, fully-translated books accumulate fast.
+    files.sort(key=lambda f: len(json.load(open(f, encoding="utf-8")).get("hadiths", [])))
     print(f"Translating into {langs} across {len(files)} books\n")
     grand = 0
     for f in files:
