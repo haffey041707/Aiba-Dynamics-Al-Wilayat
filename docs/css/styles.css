@@ -641,3 +641,14 @@ body[dir="rtl"] .list-item:hover { transform: translateX(-5px); }
 /* Recitation play / pause icons (SVG, replaces ▶/⏸ emoji) */
 .picon { width: 1.05em; height: 1.05em; vertical-align: -0.18em; display: inline-block; }
 .chip .picon { width: 14px; height: 14px; vertical-align: -0.1em; }
+
+/* Prayer tracking (live build only): tap-to-mark + streak */
+.pray-toggle {
+  width: 28px; height: 28px; flex-shrink: 0; margin-inline-start: 12px;
+  border-radius: 50%; border: 2px solid var(--glass-brd); background: transparent;
+  color: #02040a; font-weight: 800; font-size: 15px; line-height: 1; cursor: pointer;
+  display: grid; place-items: center; transition: all var(--fast) var(--ease);
+}
+.pray-toggle.done { background: linear-gradient(135deg, var(--gold-2), var(--gold)); border-color: var(--gold); }
+.pray-toggle:hover { border-color: var(--gold); }
+.prayer-row.prayed .pn { color: var(--text-0); }

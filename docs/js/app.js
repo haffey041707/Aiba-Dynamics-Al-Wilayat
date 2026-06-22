@@ -393,7 +393,32 @@ const Stats = {
     }
   },
   addDhikr(n = 1) { const s = this.get(); s.dhikrToday = (s.dhikrToday || 0) + n; this.save(s); },
+  // ---- Per-device prayer tracking (live build) ----
+  getPrayers(date) { const s = this.load(); return (s.prayers && s.prayers[date || this._today()]) || []; },
+  togglePrayer(key) {
+    const s = this._roll(this.load());
+    const d = this._today();
+    s.prayers = s.prayers || {};
+    const arr = (s.prayers[d] || []).slice();
+    const i = arr.indexOf(key);
+    if (i >= 0) arr.splice(i, 1); else arr.push(key);
+    s.prayers[d] = arr;
+    this.save(s);
+    return arr;
+  },
+  // Consecutive days on which all `total` obligatory prayers were marked.
+  prayerStreak(total) {
+    const pr = this.load().prayers || {};
+    const iso = (dt) => dt.toISOString().slice(0, 10);
+    let day = new Date();
+    if ((pr[iso(day)] || []).length < total) day = new Date(Date.now() - 864e5); // today still in progress
+    let streak = 0;
+    while ((pr[iso(day)] || []).length >= total) { streak++; day = new Date(day.getTime() - 864e5); }
+    return streak;
+  },
 };
+// The 5 obligatory daily prayers (Sunrise is not a prayer).
+const OBLIGATORY = () => PRAYERS.filter((p) => p.key !== "sunrise");
 
 // ---------- HOME ----------
 function renderHome(v) {
@@ -414,7 +439,7 @@ function renderHome(v) {
     </div>
     <div class="stat-row">
       <div class="stat"><div class="big">${next.time}</div><div class="lbl">${t("next_prayer")} · ${langName(next)}</div></div>
-      <div class="stat"><div class="big">${st.streak || 1} ${t("days")}</div><div class="lbl">${t("streak")}</div></div>
+      <div class="stat"><div class="big">${STATIC ? Stats.prayerStreak(OBLIGATORY().length) : (st.streak || 1)} ${t("days")}</div><div class="lbl">${t("streak")}</div></div>
       <div class="stat"><div class="big">${st.versesToday || 0} ${t("verses")}</div><div class="lbl">${t("read_today")}</div></div>
       <div class="stat"><div class="big">${st.dhikrToday || 0} ${t("times")}</div><div class="lbl">${t("dhikr_today")}</div></div>
     </div>
@@ -1002,17 +1027,35 @@ function renderPrayer(v) {
   const loc = State.prayer ? t(State.prayer.label === "yours" ? "loc_yours" : "loc_india") : t("loc_sample");
   const tz = (State.prayer && State.prayer.tz) || Intl.DateTimeFormat().resolvedOptions().timeZone;
   const dateStr = new Date().toLocaleDateString(dateLocale(), { timeZone: tz, weekday: "long", year: "numeric", month: "long", day: "numeric" });
-  const rows = PRAYERS.map((p) => `
-    <div class="prayer-row ${p.key === next.key ? "next" : ""}">
+  const prayed = STATIC ? Stats.getPrayers() : [];
+  const rows = PRAYERS.map((p) => {
+    const obligatory = p.key !== "sunrise";
+    const done = prayed.includes(p.key);
+    const toggle = (STATIC && obligatory)
+      ? `<button class="pray-toggle ${done ? "done" : ""}" onclick="togglePrayer('${p.key}')" title="${localizedText('Mark as prayed')}" aria-label="${localizedText('Mark as prayed')}">${done ? "✓" : ""}</button>`
+      : "";
+    return `<div class="prayer-row ${p.key === next.key ? "next" : ""} ${done ? "prayed" : ""}">
       <div class="pn">${langName(p)} ${p.key === next.key ? "· " + t("next_prayer") : ""}</div>
-      <div class="pt">${times[p.key] || p.time}</div>
-    </div>`).join("");
-  v.innerHTML = head("m_prayer", "m_prayer_d") + `
+      <div class="pt">${times[p.key] || p.time}</div>${toggle}
+    </div>`;
+  }).join("");
+  const total = OBLIGATORY().length;
+  const streakCard = STATIC ? `
+    <div class="card" style="margin-bottom:16px;text-align:center">
+      <div class="big" style="font-size:26px;font-weight:800">🔥 ${Stats.prayerStreak(total)} ${t("days")}</div>
+      <div style="color:var(--text-2);font-size:13px;margin-top:4px">${t("streak")} · ${prayed.length}/${total} ${localizedText("prayers")}</div>
+    </div>` : "";
+  v.innerHTML = head("m_prayer", "m_prayer_d") + streakCard + `
     <div class="card" style="margin-bottom:16px;text-align:center">
       <div style="color:var(--text-2);font-size:13px">📍 ${escapeHtml(loc)}${State.lang === "en" ? " · " + escapeHtml(tz) : ""} · ${t("method_shia")}</div>
       <div class="big" style="font-size:24px;margin-top:6px;font-weight:800">${dateStr}</div>
       <button class="btn ghost" style="margin-top:10px" onclick="requestLocation(true)">📍 ${t("use_location")}</button>
     </div>${rows}`;
+}
+// Mark/unmark a prayer for today (live build) and refresh the view.
+function togglePrayer(key) {
+  Stats.togglePrayer(key);
+  renderPrayer(el("#view-prayer"));
 }
 
 // ---------- QIBLA ----------
