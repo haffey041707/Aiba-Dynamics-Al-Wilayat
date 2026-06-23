@@ -136,7 +136,7 @@ body[dir="rtl"] {
 .brand .logo {
   width: 46px; height: 46px; border-radius: 14px;
   display: grid; place-items: center; overflow: hidden;
-  background: var(--bg-0);
+  background: radial-gradient(circle at 50% 42%, #1c4a92, #091f49);
   box-shadow: 0 8px 22px rgba(31, 123, 255, .4);
   animation: pulseGlow 3.5s ease-in-out infinite;
 }
@@ -144,7 +144,7 @@ body[dir="rtl"] {
   width: 100%;
   height: 100%;
   display: block;
-  object-fit: cover;
+  object-fit: contain;
 }
 @keyframes pulseGlow {
   0%,100% { box-shadow: 0 8px 22px rgba(31, 123, 255, .35); }
@@ -499,12 +499,13 @@ body[dir="rtl"] .list-item:hover { transform: translateX(-5px); }
 .brand .logo img { object-position: center; }
 .topbar-logo {
   display: none; width: 42px; height: 42px; flex-shrink: 0;
-  border-radius: 50%; overflow: hidden; cursor: pointer; background: var(--bg-0);
+  border-radius: 50%; overflow: hidden; cursor: pointer;
+  background: radial-gradient(circle at 50% 42%, #1c4a92, #091f49);
   border: 1.5px solid var(--glass-hi);
   box-shadow: 0 8px 22px rgba(31, 123, 255, .4);
   animation: pulseGlow 3.5s ease-in-out infinite;
 }
-.topbar-logo img { width: 100%; height: 100%; object-fit: cover; object-position: center; display: block; }
+.topbar-logo img { width: 100%; height: 100%; object-fit: contain; object-position: center; display: block; }
 
 /* ---------- Icon-only language button + search/settings icons ---------- */
 #langBtn { width: 44px; min-width: 44px; padding: 0; }
